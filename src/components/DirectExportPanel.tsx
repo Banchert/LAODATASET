@@ -100,7 +100,7 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
   const canResume = exporter.canResume();
 
   return (
-    <Card className="w-full">
+    <Card className="w-full transition-all duration-300" data-component="DirectExportPanel">
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">

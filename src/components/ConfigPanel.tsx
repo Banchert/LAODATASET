@@ -241,12 +241,38 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, onSettingsChange, t
               <p className="text-xs text-green-700 mb-2">
                 Use the "Direct Export System" panel on the left to:
               </p>
-              <ul className="text-xs text-green-600 space-y-1">
+              <ul className="text-xs text-green-600 space-y-1 mb-3">
                 <li>• Select export folder</li>
                 <li>• Type custom path manually</li>
                 <li>• View storage information</li>
                 <li>• Monitor export progress</li>
               </ul>
+
+              {/* Quick Action Button */}
+              <Button
+                type="button"
+                size="sm"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium"
+                onClick={() => {
+                  // Scroll to Direct Export System
+                  const directExportPanel = document.querySelector('[data-component="DirectExportPanel"]');
+                  if (directExportPanel) {
+                    directExportPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Add highlight effect
+                    directExportPanel.classList.add('ring-4', 'ring-green-300', 'ring-opacity-75');
+                    setTimeout(() => {
+                      directExportPanel.classList.remove('ring-4', 'ring-green-300', 'ring-opacity-75');
+                    }, 3000);
+                  } else {
+                    alert('🔍 Direct Export System panel should be on the left side of the screen.\n\n📱 If you don\'t see it, try:\n• Scroll to the top of the page\n• Make browser window wider\n• Look for the green panel with "Direct Export System" title');
+                  }
+                }}
+              >
+                🎯 Take Me to Direct Export System
+              </Button>
+              <p className="text-xs text-center text-green-600 mt-1 lao-text">
+                ກົດເພື່ອໄປທີ່ລະບົບ Direct Export
+              </p>
             </div>
           </div>
 
