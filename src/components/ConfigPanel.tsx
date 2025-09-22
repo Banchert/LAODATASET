@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sliders, ImageIcon, Zap, FolderOpen } from 'lucide-react';
+import { Sliders, ImageIcon, Zap } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -222,35 +222,31 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, onSettingsChange, t
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="outputPath" className="lao-text">
-              ທີ່ຢູ່ບັນທຶກ (Output Path):
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="outputPath"
-                type="text"
-                value="Use Direct Export System instead"
-                disabled={true}
-                className="bg-gray-100 text-gray-500 flex-1"
-                placeholder="Use Direct Export System"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={true}
-                className="px-3 opacity-50"
-              >
-                <FolderOpen className="h-4 w-4" />
-              </Button>
+          {/* Output Path Configuration */}
+          <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                <span className="text-white text-lg">📁</span>
+              </div>
+              <div>
+                <h4 className="font-bold text-green-800 lao-text">ການຕັ້ງຄ່າໂຟລເດີ</h4>
+                <p className="text-xs text-green-600">Folder Configuration</p>
+              </div>
             </div>
-            <div className="text-xs text-green-700 space-y-1 bg-green-50 p-2 rounded border border-green-200">
-              <p className="font-medium">📁 Use Direct Export System instead</p>
-              <p className="lao-text">ໃຊ້ລະບົບ Direct Export ທີ່ໜ້າຊ້າຍ</p>
-              <p className="text-green-600">
-                ✨ No more path configuration needed!
+
+            <div className="bg-white/70 p-3 rounded-lg border border-green-200">
+              <p className="text-sm text-green-800 font-medium mb-2 lao-text">
+                📍 ໃຊ້ "Direct Export System" ທີ່ໜ້າຊ້າຍ
               </p>
+              <p className="text-xs text-green-700 mb-2">
+                Use the "Direct Export System" panel on the left to:
+              </p>
+              <ul className="text-xs text-green-600 space-y-1">
+                <li>• Select export folder</li>
+                <li>• Type custom path manually</li>
+                <li>• View storage information</li>
+                <li>• Monitor export progress</li>
+              </ul>
             </div>
           </div>
 
