@@ -14,8 +14,7 @@ interface ConfigSettings {
   addRotation: boolean;
   randomColors: boolean;
   projectName: string;
-  autoSave: boolean;
-  autoDownload: boolean; // เพิ่มการดาวน์โหลดอัตโนมัติ
+  // autoSave and autoDownload removed - Direct Export handles this
   styleVariations: boolean;
   outputPath: string;
   autoSaveInterval: number;
@@ -268,27 +267,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, onSettingsChange, t
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="autoSave"
-              checked={settings.autoSave}
-              onCheckedChange={(checked) => updateSetting('autoSave', checked)}
-            />
-            <Label htmlFor="autoSave" className="text-sm lao-text">
-              ບັນທຶກອັດຕະໂນມັດ (Auto Save)
-            </Label>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="autoDownload"
-              checked={settings.autoDownload}
-              onCheckedChange={(checked) => updateSetting('autoDownload', checked)}
-            />
-            <Label htmlFor="autoDownload" className="text-sm lao-text">
-              🚀 ດາວໂຫລດອັດຕະໂນມັດ (Auto Download)
-            </Label>
-          </div>
+          {/* Auto Save & Download removed - Direct Export handles this */}
 
           <div className="flex items-center space-x-2">
             <Checkbox

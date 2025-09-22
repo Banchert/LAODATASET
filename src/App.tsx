@@ -55,8 +55,7 @@ interface ConfigSettings {
   addRotation: boolean;
   randomColors: boolean;
   projectName: string;
-  autoSave: boolean;
-  autoDownload: boolean; // เพิ่มการดาวน์โหลดอัตโนมัติ
+  // autoSave and autoDownload removed - Direct Export handles this
   styleVariations: boolean;
   outputPath: string;
   autoSaveInterval: number;
@@ -101,8 +100,7 @@ const App = () => {
     addRotation: true,
     randomColors: true,
     projectName: `lao-ocr-${new Date().toISOString().split('T')[0]}`,
-    autoSave: true,
-    autoDownload: true, // เพิ่มการดาวน์โหลดอัตโนมัติ
+    // autoSave and autoDownload removed - Direct Export handles this
     styleVariations: true,
     outputPath: 'C:/OCR_Dataset',
     autoSaveInterval: 500,
@@ -708,44 +706,7 @@ const App = () => {
               totalGenerated: imageIndex,
             }));
 
-            // Auto-save at intervals if enabled
-            if (settings.autoSave && imageIndex % settings.autoSaveInterval === 0 && imageIndex > 0) {
-              console.log(`Auto-saving at ${imageIndex} images...`);
-              try {
-                await performAutoSave(generatedImages, settings.projectName, settings.outputPath);
-                toast({
-                  title: "Auto-saved",
-                  description: `Saved ${imageIndex} images to ${settings.outputPath || 'Downloads'}`,
-                });
-              } catch (error) {
-                console.error('Auto-save failed:', error);
-              }
-            }
-
-            // Auto-save at intervals if enabled
-            if (settings.autoSave && imageIndex % settings.autoSaveInterval === 0 && imageIndex > 0) {
-              console.log(`Auto-saving at ${imageIndex} images...`);
-              
-              // Create partial dataset for auto-save
-              const partialDataset = generatedImages.slice();
-              
-              // Trigger auto-save
-              const autoSaveEvent = new CustomEvent('auto-save-partial-dataset', {
-                detail: { 
-                  dataset: partialDataset, 
-                  projectName: `${settings.projectName}_partial_${imageIndex}`,
-                  imageWidth: settings.imageWidth,
-                  imageHeight: settings.imageHeight,
-                  outputPath: settings.outputPath
-                }
-              });
-              window.dispatchEvent(autoSaveEvent);
-              
-              toast({
-                title: "Auto-Save",
-                description: `Saved ${imageIndex} images to ${settings.outputPath || 'Downloads'}`,
-              });
-            }
+            // Auto-save removed - Direct Export handles real-time saving
 
             // Yield to the main thread every 10 images to keep the UI responsive
             if (imageIndex % 10 === 0) {
@@ -823,50 +784,16 @@ const App = () => {
       console.log('🎊 Triggering special completion effects...');
     }
 
-    // 🚀 ดาวน์โหลดอัตโนมัติเมื่อเสร็จสิ้น
-    if (settings.autoDownload || (singleDownload && realTimeExporter)) {
-      console.log('📦 Starting automatic download...');
-      try {
-        await realTimeExporter?.downloadAll();
-        toast({
-          title: "🎉 ດາວໂຫລດສຳເລັດ! (Download Complete!)",
-          description: `✅ ດາວໂຫລດ ${imageIndex.toLocaleString()} ຮູບພາບແລ້ວ\n📁 ໃຊ້ ${processedFonts.length} fonts\n🎨 PROFESSIONAL: ${fontStats.professional} (${professionalPercentage}%)\n🎯 15K DATASET: ຄຸນນະພາບສູງສຸດ!\n🚀 ດາວໂຫລດອັດຕະໂນມັດ: ເປີດໃຊ້ງານ`,
-        });
-      } catch (downloadError) {
-        console.error('Auto-download failed:', downloadError);
-        toast({
-          title: "ດາວໂຫລດລົ້ມເຫລວ (Download Failed)",
-          description: "ການດາວໂຫລດອັດຕະໂນມັດລົ້ມເຫລວ ກະລຸນາລອງໃໝ່",
-          variant: "destructive",
-        });
-      }
-    } else {
-      // Show enhanced completion toast
-      toast({
-        title: "🎊 ສຳເລັດການສ້າງ Dataset!",
-        description: `✅ ສ້າງ ${imageIndex.toLocaleString()} ຮູບພາບແລ້ວ\n📁 ໃຊ້ ${processedFonts.length} fonts\n🎨 PROFESSIONAL: ${fontStats.professional} (${professionalPercentage}%)\n🎯 FORCED: ${fontStats.forced} (${forcedPercentage}%)\n✅ Custom: ${fontStats.custom}\n🔧 System/Fallback: ${fontStats.fallback + fontStats.system}\n${skippedFonts.length > 0 ? `⚠️ ຂ້າມ ${skippedFonts.length} fonts ທີ່ບໍ່ຮອງຮັບ` : ''}\n🚀 ພ້ອມສຳລັບການດາວໂຫລດ!`,
-      });
-    }
+    // Show completion toast - Direct Export already handled file saving
+    toast({
+      title: "🎊 ສຳເລັດການສ້າງ Dataset!",
+      description: `✅ ສ້າງ ${imageIndex.toLocaleString()} ຮູບພາບແລ້ວ\n📁 ໃຊ້ ${processedFonts.length} fonts\n🎨 PROFESSIONAL: ${fontStats.professional} (${professionalPercentage}%)\n🎯 FORCED: ${fontStats.forced} (${forcedPercentage}%)\n✅ Custom: ${fontStats.custom}\n🔧 System/Fallback: ${fontStats.fallback + fontStats.system}\n${skippedFonts.length > 0 ? `⚠️ ຂ້າມ ${skippedFonts.length} fonts ທີ່ບໍ່ຮອງຮັບ` : ''}\n📁 ໄຟລ໌ຖືກບັນທຶກໃນໂຟລເດີທີ່ເລືອກແລ້ວ!`,
+    });
 
     const newlyGenerated = new Set(generatedImages.map(img => img.font));
     setGeneratedFonts(prev => new Set([...prev, ...newlyGenerated]));
     
-    // Auto-save if enabled
-    if (settings.autoSave) {
-      console.log("Auto-saving dataset...");
-      setTimeout(() => {
-        // Trigger download automatically
-        const downloadEvent = new CustomEvent('auto-download-dataset', {
-          detail: { 
-            dataset: generatedImages, 
-            projectName: settings.projectName,
-            imageWidth: settings.imageWidth,
-            imageHeight: settings.imageHeight
-          }
-        });
-        window.dispatchEvent(downloadEvent);
-      }, 1000);
-    }
+    // Auto-save removed - Direct Export handles real-time saving
     
     console.log("handleGenerate: Function finished.");
   };
@@ -875,19 +802,7 @@ const App = () => {
     setGeneratedFonts(new Set());
   };
 
-  // Auto-save function
-  const performAutoSave = async (images: GeneratedImage[], projectName: string, outputPath: string) => {
-    // Create auto-save event for DownloadSection to handle
-    const autoSaveEvent = new CustomEvent('auto-save-progress', {
-      detail: { 
-        dataset: images, 
-        projectName: projectName,
-        outputPath: outputPath,
-        timestamp: new Date().toISOString()
-      }
-    });
-    window.dispatchEvent(autoSaveEvent);
-  };
+  // Auto-save function removed - Direct Export handles real-time saving
 
   // Show loading screen during initialization
   if (isInitializing) {
