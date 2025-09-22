@@ -1,0 +1,176 @@
+<div data-lov-id="src\components\FontPreview.tsx:34:4" data-lov-name="div"
+    data-component-path="src\components\FontPreview.tsx" data-component-line="34" data-component-file="FontPreview.tsx"
+    data-component-name="div"
+    data-component-content="%7B%22text%22%3A%22%E0%BA%AA%E0%BA%B0%E0%BA%9A%E0%BA%B2%E0%BA%8D%E0%BA%94%E0%BA%B5%22%2C%22className%22%3A%22p-2%20bg-background%20rounded-md%20border%20text-center%22%7D"
+    class="p-2 bg-background rounded-md border text-center" title="Preview for ALICE_5A.TTF" style="font-size: 1.5rem;">
+    ສະບາຍດີ</div>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Preview Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .font-preview {
+            font-size: 24px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .lao-text {
+            font-family: 'Noto Sans Lao', 'Phetsarath OT', Arial, sans-serif;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .custom {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .system {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 Font Preview Test</h1>
+
+    <div class="test-container">
+        <h2>System Font Test</h2>
+        <div class="font-preview lao-text">
+            ສະບາຍດີ ຂ້ອຍຊື່ວິໄລ ມາຈາກລາວ
+        </div>
+        <div class="font-preview">
+            Hello World - English Text
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>Canvas Font Rendering Test</h2>
+        <div>
+            <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2" />
+            <button onclick="testFont()">Test Font</button>
+        </div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testFont() {
+            const fileInput = document.getElementById('fontFile');
+            const resultsDiv = document.getElementById('results');
+
+            if (!fileInput.files[0]) {
+                alert('Please select a font file');
+                return;
+            }
+
+            const fontFile = fileInput.files[0];
+            const fontUrl = URL.createObjectURL(fontFile);
+            const fontName = `TestFont_${Date.now()}`;
+
+            try {
+                // Load font
+                const fontFace = new FontFace(fontName, `url(${fontUrl})`);
+                const loadedFont = await fontFace.load();
+                document.fonts.add(loadedFont);
+
+                await document.fonts.ready;
+
+                // Test rendering
+                const canvas = document.createElement('canvas');
+                canvas.width = 400;
+                canvas.height = 100;
+                const ctx = canvas.getContext('2d');
+
+                // Clear canvas
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 400, 100);
+
+                // Test custom font
+                ctx.fillStyle = '#000000';
+                ctx.font = `24px "${fontName}"`;
+                ctx.fillText('ສະບາຍດີ ຂ້ອຍຊື່ວິໄລ', 10, 30);
+                ctx.fillText('Hello World Test', 10, 60);
+
+                // Measure text
+                const laoWidth = ctx.measureText('ສະບາຍດີ').width;
+                const englishWidth = ctx.measureText('Hello').width;
+
+                // Compare with system font
+                ctx.font = '24px Arial';
+                const systemLaoWidth = ctx.measureText('ສະບາຍດີ').width;
+                const systemEnglishWidth = ctx.measureText('Hello').width;
+
+                // Display results
+                resultsDiv.innerHTML = `
+                    <h3>Font Test Results: ${fontFile.name}</h3>
+                    <canvas id="testCanvas"></canvas>
+                    <div style="margin: 10px 0;">
+                        <div class="status ${laoWidth > 0 ? 'custom' : 'failed'}">
+                            Lao Text: ${laoWidth.toFixed(2)}px (Custom) vs ${systemLaoWidth.toFixed(2)}px (System)
+                        </div>
+                        <div class="status ${englishWidth > 0 ? 'custom' : 'failed'}">
+                            English Text: ${englishWidth.toFixed(2)}px (Custom) vs ${systemEnglishWidth.toFixed(2)}px (System)
+                        </div>
+                        <div class="status ${Math.abs(laoWidth - systemLaoWidth) > 2 ? 'custom' : 'system'}">
+                            Font Difference: ${Math.abs(laoWidth - systemLaoWidth).toFixed(2)}px
+                        </div>
+                    </div>
+                `;
+
+                // Add canvas to results
+                const testCanvas = document.getElementById('testCanvas');
+                testCanvas.replaceWith(canvas);
+                canvas.id = 'testCanvas';
+
+                // Clean up
+                URL.revokeObjectURL(fontUrl);
+                document.fonts.delete(loadedFont);
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="status failed">
+                        Error loading font: ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+
+</html>

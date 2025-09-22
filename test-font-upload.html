@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Font Upload</title>
+    <meta charset="UTF-8">
+</head>
+
+<body>
+    <h1>Test Lao Font Upload</h1>
+    <input type="file" id="fontInput" accept=".ttf,.otf" multiple>
+    <div id="result"></div>
+
+    <script>
+        // Copy the font validation function
+        async function isValidLaoFont(fontFile) {
+            const testString = 'ກຂຄງຈສຊ';
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            if (!ctx) {
+                console.error('Could not get canvas context for font validation.');
+                return false;
+            }
+
+            canvas.width = 200;
+            canvas.height = 50;
+
+            const fontUrl = URL.createObjectURL(fontFile);
+            const fontName = `font-validator-${Date.now()}-${Math.random()}`;
+            const fontFace = new FontFace(fontName, `url(${fontUrl})`);
+
+            try {
+                await fontFace.load();
+                document.fonts.add(fontFace);
+
+                ctx.font = `20px ${fontName}`;
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.fillText(testString, 10, 30);
+                const testImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                const testPixelCount = countNonBgPixels(testImageData, 0);
+
+                ctx.font = '20px sans-serif';
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.fillText(testString, 10, 30);
+                const fallbackImageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                const fallbackPixelCount = countNonBgPixels(fallbackImageData, 0);
+
+                document.fonts.delete(fontFace);
+                URL.revokeObjectURL(fontUrl);
+
+                return testPixelCount > fallbackPixelCount * 1.2;
+
+            } catch (error) {
+                console.error(`Error loading or validating font ${fontFile.name}:`, error);
+                URL.revokeObjectURL(fontUrl);
+                return false;
+            }
+        }
+
+        function countNonBgPixels(data, bgR) {
+            let count = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] !== bgR) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        document.getElementById('fontInput').addEventListener('change', async function (e) {
+            const files = e.target.files;
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>Testing fonts...</p>';
+
+            for (const file of files) {
+                console.log(`Testing font: ${file.name}`);
+                const isValid = await isValidLaoFont(file);
+                result.innerHTML += `<p>${file.name}: ${isValid ? '✅ Valid Lao Font' : '❌ Invalid'}</p>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

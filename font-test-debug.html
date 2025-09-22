@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Font Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-area { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        canvas { border: 1px solid #000; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Font Loading Test for Lao OCR Dataset</h1>
+    
+    <div class="test-area">
+        <h3>Upload Font File:</h3>
+        <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2">
+        <button onclick="testFont()">Test Font</button>
+    </div>
+    
+    <div class="test-area">
+        <h3>Test Results:</h3>
+        <div id="results"></div>
+        <canvas id="testCanvas" width="400" height="100"></canvas>
+    </div>
+
+    <script>
+        async function testFont() {
+            const fileInput = document.getElementById('fontInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a font file');
+                return;
+            }
+            
+            const results = document.getElementById('results');
+            const canvas = document.getElementById('testCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            results.innerHTML = '<p>Testing font: ' + file.name + '</p>';
+            
+            try {
+                // Load font
+                const fontUrl = URL.createObjectURL(file);
+                const fontName = 'TestFont_' + Date.now();
+                const fontFace = new FontFace(fontName, `url(${fontUrl})`);
+                
+                results.innerHTML += '<p>Loading font...</p>';
+                
+                const loadedFont = await fontFace.load();
+                document.fonts.add(loadedFont);
+                
+                await document.fonts.ready;
+                
+                results.innerHTML += '<p>✅ Font loaded successfully!</p>';
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Test with Lao text
+                const laoText = 'ສະບາຍດີ ຂ້ອຍຊື່ວິໄລ';
+                
+                // Draw with custom font (no fallback)
+                ctx.fillStyle = 'black';
+                ctx.font = `24px "${fontName}"`;
+                ctx.fillText('Custom Font: ' + laoText, 10, 30);
+                
+                // Draw with system font for comparison
+                ctx.font = `24px 'Noto Sans Lao', Arial, sans-serif`;
+                ctx.fillText('System Font: ' + laoText, 10, 60);
+                
+                // Test English text too
+                ctx.font = `20px "${fontName}"`;
+                ctx.fillText('English: Hello World', 10, 85);
+                
+                // Measure text
+                ctx.font = `24px "${fontName}"`;
+                const customWidth = ctx.measureText(laoText).width;
+                const customEnglishWidth = ctx.measureText('Hello').width;
+                
+                ctx.font = `24px 'Noto Sans Lao', Arial, sans-serif`;
+                const systemWidth = ctx.measureText(laoText).width;
+                
+                results.innerHTML += `<p>Custom Lao width: ${customWidth}px</p>`;
+                results.innerHTML += `<p>Custom English width: ${customEnglishWidth}px</p>`;
+                results.innerHTML += `<p>System Lao width: ${systemWidth}px</p>`;
+                
+                const widthDifference = Math.abs(customWidth - systemWidth);
+                results.innerHTML += `<p>Width difference: ${widthDifference}px</p>`;
+                
+                if (customWidth > 0 && customEnglishWidth > 0) {
+                    if (widthDifference > 5) {
+                        results.innerHTML += '<p>✅ Font is working and different from system font!</p>';
+                    } else {
+                        results.innerHTML += '<p>⚠️ Font loaded but may be using system fallback</p>';
+                    }
+                } else {
+                    results.innerHTML += '<p>❌ Font not working properly</p>';
+                }
+                
+                // Clean up
+                document.fonts.delete(loadedFont);
+                URL.revokeObjectURL(fontUrl);
+                
+            } catch (error) {
+                results.innerHTML += '<p>❌ Error: ' + error.message + '</p>';
+                console.error('Font test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
