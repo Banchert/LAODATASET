@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FolderOpen, Save, Play, Pause, RotateCcw, Settings2, CheckCircle } from 'lucide-react';
+import { FolderOpen, Save, Play, Pause, RotateCcw, Settings2, CheckCircle, HardDrive, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Input } from './ui/input';
@@ -20,6 +20,7 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
   const [settings, setSettings] = useState<ExportSettings>(exporter.getSettings());
   const [progress, setProgress] = useState<ExportProgress>(exporter.getProgress());
   const [folderSelected, setFolderSelected] = useState(false);
+  const [diskSpace, setDiskSpace] = useState<{available: number, total: number} | null>(null);
 
   useEffect(() => {
     // ตั้งค่า callback สำหรับ progress updates
@@ -55,6 +56,38 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
   const handleClearProgress = () => {
     exporter.clearProgress();
     setProgress(exporter.getProgress());
+  };
+
+  // ตรวจสอบพื้นที่ดิสก์
+  const checkDiskSpace = async (path: string) => {
+    try {
+      // ใน browser ไม่สามารถตรวจสอบพื้นที่ดิสก์ได้โดยตรง
+      // แต่สามารถประมาณได้จากขนาดของ dataset ที่จะสร้าง
+      if ('storage' in navigator && 'estimate' in navigator.storage) {
+        const estimate = await navigator.storage.estimate();
+        setDiskSpace({
+          available: estimate.quota || 0,
+          total: estimate.quota || 0
+        });
+      }
+    } catch (error) {
+      console.warn('Cannot check disk space:', error);
+    }
+  };
+
+  // ฟังก์ชันคำนวณขนาด dataset ที่จะสร้าง
+  const estimateDatasetSize = () => {
+    const imageSize = 50; // KB per image (ประมาณ)
+    const totalImages = progress.totalImages || 15000;
+    const estimatedSizeKB = totalImages * imageSize;
+    const estimatedSizeMB = estimatedSizeKB / 1024;
+    const estimatedSizeGB = estimatedSizeMB / 1024;
+
+    if (estimatedSizeGB > 1) {
+      return `${estimatedSizeGB.toFixed(1)} GB`;
+    } else {
+      return `${estimatedSizeMB.toFixed(0)} MB`;
+    }
   };
 
   const stats = exporter.getStats();
@@ -100,11 +133,97 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
           </div>
 
           {settings.selectedFolder && (
-            <div className="p-3 bg-gray-50 rounded-lg border">
-              <p className="text-xs text-gray-600 mb-1">Selected Folder:</p>
-              <p className="text-sm font-mono text-gray-800 break-all">
-                {settings.selectedFolder}
-              </p>
+            <div className="space-y-3">
+              <div className="p-3 bg-gray-50 rounded-lg border">
+                <p className="text-xs text-gray-600 mb-1">Selected Folder:</p>
+                <p className="text-sm font-mono text-gray-800 break-all">
+                  {settings.selectedFolder}
+                </p>
+              </div>
+
+              {/* Manual Path Input */}
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-blue-700">
+                  🛠️ Manual Path (Optional):
+                </Label>
+                <Input
+                  type="text"
+                  value={settings.selectedFolder}
+                  onChange={(e) => {
+                    exporter.updateSettings({ selectedFolder: e.target.value });
+                    setSettings(exporter.getSettings());
+                  }}
+                  placeholder="C:\Users\YourName\Desktop\MyDataset"
+                  className="text-sm font-mono"
+                />
+                <p className="text-xs text-blue-600">
+                  💡 Type your custom path or use folder picker above
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Storage Information */}
+          {settings.selectedFolder && (
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-3 flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Storage Information
+                </h4>
+
+                <div className="space-y-3">
+                  {/* Full Export Path */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <p className="text-xs text-blue-600">Full Export Path:</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          // Copy path to clipboard
+                          const fullPath = `${settings.selectedFolder}/${settings.projectName}`;
+                          navigator.clipboard.writeText(fullPath);
+                          alert('Path copied to clipboard!');
+                        }}
+                        className="text-xs px-2 py-1 h-6"
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                    <div className="bg-white p-2 rounded border font-mono text-sm text-gray-800 break-all">
+                      {settings.selectedFolder}/{settings.projectName}
+                    </div>
+                  </div>
+
+                  {/* Dataset Size Estimation */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded border text-center">
+                      <div className="text-lg font-bold text-blue-700">{estimateDatasetSize()}</div>
+                      <div className="text-xs text-blue-600">Estimated Size</div>
+                    </div>
+                    <div className="bg-white p-3 rounded border text-center">
+                      <div className="text-lg font-bold text-green-700">
+                        {progress.totalImages || 15000}
+                      </div>
+                      <div className="text-xs text-green-600">Total Images</div>
+                    </div>
+                  </div>
+
+                  {/* Disk Space Warning */}
+                  <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                    <div className="flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-yellow-600" />
+                      <p className="text-xs text-yellow-800 font-medium">
+                        Make sure you have enough disk space!
+                      </p>
+                    </div>
+                    <p className="text-xs text-yellow-700 mt-1 lao-text">
+                      ໃຫ້ແນ່ໃຈວ່າມີພື້ນທີ່ດິສກ໌ພຽງພໍ!
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
