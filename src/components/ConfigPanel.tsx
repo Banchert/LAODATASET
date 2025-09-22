@@ -230,39 +230,26 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, onSettingsChange, t
               <Input
                 id="outputPath"
                 type="text"
-                value={settings.outputPath}
-                onChange={(e) => updateSetting('outputPath', e.target.value)}
-                className="bg-background flex-1"
-                placeholder="Leave empty for Downloads folder"
+                value="Use Direct Export System instead"
+                disabled={true}
+                className="bg-gray-100 text-gray-500 flex-1"
+                placeholder="Use Direct Export System"
               />
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  // Create file input for directory selection
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.webkitdirectory = true;
-                  input.onchange = (e) => {
-                    const target = e.target as HTMLInputElement;
-                    if (target.files && target.files[0]) {
-                      const path = target.files[0].webkitRelativePath.split('/')[0];
-                      updateSetting('outputPath', path);
-                    }
-                  };
-                  input.click();
-                }}
-                className="px-3"
+                disabled={true}
+                className="px-3 opacity-50"
               >
                 <FolderOpen className="h-4 w-4" />
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>Select folder to save generated datasets</p>
-              <p className="lao-text">ເລືອກໂຟນເດີເພື່ອບັນທຶກ dataset ທີ່ສ້າງ</p>
-              <p className="text-amber-600">
-                💡 Leave empty to use default Downloads folder
+            <div className="text-xs text-green-700 space-y-1 bg-green-50 p-2 rounded border border-green-200">
+              <p className="font-medium">📁 Use Direct Export System instead</p>
+              <p className="lao-text">ໃຊ້ລະບົບ Direct Export ທີ່ໜ້າຊ້າຍ</p>
+              <p className="text-green-600">
+                ✨ No more path configuration needed!
               </p>
             </div>
           </div>

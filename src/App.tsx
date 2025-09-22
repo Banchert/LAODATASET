@@ -102,7 +102,7 @@ const App = () => {
     projectName: `lao-ocr-${new Date().toISOString().split('T')[0]}`,
     // autoSave and autoDownload removed - Direct Export handles this
     styleVariations: true,
-    outputPath: 'C:/OCR_Dataset',
+    outputPath: '', // Not used - Direct Export handles folder selection
     autoSaveInterval: 500,
     enableRealTimeExport: true,
     exportBatchSize: 10,
