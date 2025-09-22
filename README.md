@@ -1,73 +1,68 @@
-# Welcome to your Lovable project
+# 🎨 Lao Font Craft - ເຄື່ອງມືສ້າງ Dataset OCR ລາວ
 
-## Project info
+Professional Lao OCR Dataset Generator - Create high-quality training datasets for Lao text recognition models with **15,000+ images per font**.
 
-**URL**: https://lovable.dev/projects/0dfeb757-84f0-4248-ae72-0271177a2678
+## ✨ Features
 
-## How can I edit this code?
+- 🎯 **Professional Quality**: Generate 15,000+ high-resolution images per font
+- 🚀 **GPU Accelerated**: Fast processing with GPU support
+- 📱 **Modern UI**: Beautiful React + TypeScript + Tailwind interface
+- 🎨 **Style Variations**: 8 different effects per text (clear, blurred, faded, etc.)
+- 📝 **Comprehensive Coverage**: Full Lao alphabet + literature vocabulary
+- 💾 **Real-time Export**: Auto-save and batch download
+- 🔤 **Multi-font Support**: Process multiple fonts simultaneously
+- 🌐 **Professional Rendering**: Advanced font rendering system
 
-There are several ways of editing your application.
+## 🚀 Quick Start
 
-**Use Lovable**
+```bash
+# Clone the repository
+git clone https://github.com/Banchert/LAODATASET.git
+cd LAODATASET
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0dfeb757-84f0-4248-ae72-0271177a2678) and start prompting.
+# Install dependencies
+npm install
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open http://localhost:8080 in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 💻 Usage
 
-**Use GitHub Codespaces**
+1. **Upload Fonts**: Drag & drop your Lao font files (.ttf, .otf, .woff)
+2. **Configure Settings**: Set image dimensions, effects, and output preferences
+3. **Generate Dataset**: Click "ເລີ່ມສ້າງ Dataset 15,000 ຮູບພາບ" to start
+4. **Download Results**: Auto-download ZIP file with organized dataset
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🛠 Technologies
 
-## What technologies are used for this project?
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI**: Tailwind CSS + shadcn/ui components
+- **Processing**: GPU-accelerated canvas rendering
+- **Export**: Real-time ZIP generation and download
 
-This project is built with:
+## 📊 Dataset Features
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- ✅ Complete Lao alphabet coverage (37 consonants × 28 vowels × 5 tone marks)
+- 📚 Literature vocabulary integration
+- 🎨 Professional font rendering with style variations
+- 📏 Customizable image dimensions (default: 256×64px)
+- 🔄 Smart text selection to avoid repetition
+- 💾 Organized export structure by font
 
-## How can I deploy this project?
+## 🎯 Perfect for
 
-Simply open [Lovable](https://lovable.dev/projects/0dfeb757-84f0-4248-ae72-0271177a2678) and click on Share -> Publish.
+- 🤖 Training OCR models for Lao text recognition
+- 📚 Creating ML datasets for Southeast Asian languages
+- 🔬 Research in computational linguistics
+- 🎓 Educational projects in AI/ML
 
-## Can I connect a custom domain to my Lovable project?
+## 📄 License
 
-Yes, you can!
+MIT License - Feel free to use for research and commercial projects.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Made with ❤️ for the Lao OCR community
