@@ -98,25 +98,35 @@ export class RealTimeExporter {
     try {
       const zip = new JSZip();
       
-      // จัดกลุ่มตามฟอนต์
-      const imagesByFont = this.groupImagesByFont(this.allImages);
+      // 📁 สร้างโครงสร้างโฟลเดอร์แยกตาม effect และ font
+      const imagesByFontAndEffect = this.groupImagesByFontAndEffect(this.allImages);
       
-      // เพิ่มรูปภาพแยกตามฟอนต์
-      for (const [fontName, images] of Object.entries(imagesByFont)) {
+      // เพิ่มรูปภาพแยกตามฟอนต์และ effect
+      for (const [fontName, effectGroups] of Object.entries(imagesByFontAndEffect)) {
         const sanitizedFontName = fontName.replace(/[^a-zA-Z0-9-_]/g, '_');
         
-        images.forEach((image, index) => {
-          const filename = `${sanitizedFontName}_${(index + 1).toString().padStart(5, '0')}.${this.config.imageFormat}`;
-          const folderPath = `fonts/${sanitizedFontName}/${filename}`;
+        for (const [effectType, images] of Object.entries(effectGroups)) {
+          const sanitizedEffectName = effectType.replace(/[^a-zA-Z0-9-_]/g, '_');
           
-          // แปลง dataURL เป็น base64
-          const base64Data = image.dataUrl.split(',')[1];
-          zip.file(folderPath, base64Data, {base64: true});
-        });
+          images.forEach((image, index) => {
+            // ใช้ชื่อไฟล์ที่กำหนดเองถ้ามี หรือสร้างใหม่
+            const customFileName = image.fileName || `${sanitizedFontName}_${(index + 1).toString().padStart(5, '0')}_${sanitizedEffectName}`;
+            const filename = `${customFileName}.${this.config.imageFormat}`;
+            const folderPath = `fonts/${sanitizedFontName}/${sanitizedEffectName}/${filename}`;
+            
+            // แปลง dataURL เป็น base64
+            const base64Data = image.dataUrl.split(',')[1];
+            zip.file(folderPath, base64Data, {base64: true});
+          });
+          
+          // สร้างไฟล์ labels สำหรับแต่ละ effect
+          const labels = this.createLabelsForImages(images, fontName, effectType);
+          zip.file(`fonts/${sanitizedFontName}/${sanitizedEffectName}/labels.json`, JSON.stringify(labels, null, 2));
+        }
         
-        // สร้างไฟล์ labels สำหรับแต่ละฟอนต์
-        const labels = this.createLabelsForImages(images, fontName);
-        zip.file(`fonts/${sanitizedFontName}/labels.json`, JSON.stringify(labels, null, 2));
+        // สร้างไฟล์สรุปสำหรับแต่ละฟอนต์
+        const fontSummary = this.createFontSummary(effectGroups, fontName);
+        zip.file(`fonts/${sanitizedFontName}/font_summary.json`, JSON.stringify(fontSummary, null, 2));
       }
       
       // เพิ่มไฟล์สถิติรวม
@@ -414,7 +424,30 @@ export class RealTimeExporter {
     console.log('⏹️ Real-time export stopped');
   }
 
-  // จัดกลุ่มรูปภาพตามฟอนต์
+  // จัดกลุ่มรูปภาพตามฟอนต์และ effect
+  private groupImagesByFontAndEffect(images: GeneratedImage[]): Record<string, Record<string, GeneratedImage[]>> {
+    const grouped: Record<string, Record<string, GeneratedImage[]>> = {};
+    
+    images.forEach(image => {
+      // ใช้ fontName ถ้ามี หรือแยกจาก font string
+      const fontName = image.fontName || this.extractFontName(image.font);
+      const effectType = image.effectType || image.style || 'default';
+      
+      if (!grouped[fontName]) {
+        grouped[fontName] = {};
+      }
+      
+      if (!grouped[fontName][effectType]) {
+        grouped[fontName][effectType] = [];
+      }
+      
+      grouped[fontName][effectType].push(image);
+    });
+    
+    return grouped;
+  }
+
+  // จัดกลุ่มรูปภาพตามฟอนต์ (เก่า - สำหรับ backward compatibility)
   private groupImagesByFont(images: GeneratedImage[]): Record<string, GeneratedImage[]> {
     const grouped: Record<string, GeneratedImage[]> = {};
     
@@ -429,20 +462,64 @@ export class RealTimeExporter {
     return grouped;
   }
 
-  // สร้าง labels สำหรับรูปภาพ
-  private createLabelsForImages(images: GeneratedImage[], fontName: string): any[] {
-    return images.map((image, index) => ({
-      filename: `${fontName.replace(/[^a-zA-Z0-9-_]/g, '_')}_${(index + 1).toString().padStart(5, '0')}.${this.config.imageFormat}`,
-      text: image.text,
-      font: fontName,
-      category: this.categorizeText(image.text),
-      syllables: this.estimateSyllables(image.text),
-      length: image.text.length,
-      hasNumbers: /[໐-໙0-9]/.test(image.text),
-      hasEnglish: /[a-zA-Z]/.test(image.text),
-      timestamp: image.timestamp || Date.now(),
-      index: index + 1
-    }));
+  // แยกชื่อฟอนต์จาก font string
+  private extractFontName(fontString: string): string {
+    // ลบส่วน (PROFESSIONAL), (FORCED), etc.
+    return fontString.replace(/\s*\([^)]*\)/g, '').trim();
+  }
+
+  // สร้างสรุปสำหรับแต่ละฟอนต์
+  private createFontSummary(effectGroups: Record<string, GeneratedImage[]>, fontName: string): any {
+    const totalImages = Object.values(effectGroups).reduce((sum, images) => sum + images.length, 0);
+    const effects = Object.keys(effectGroups);
+    
+    return {
+      fontName: fontName,
+      totalImages: totalImages,
+      effects: effects.map(effect => ({
+        effectType: effect,
+        imageCount: effectGroups[effect].length,
+        sampleTexts: effectGroups[effect].slice(0, 5).map(img => img.text)
+      })),
+      createdAt: new Date().toISOString(),
+      structure: {
+        description: "Images organized by effect type",
+        folders: effects.map(effect => `${effect}/`)
+      }
+    };
+  }
+
+  // สร้าง labels สำหรับรูปภาพ (รองรับ effect)
+  private createLabelsForImages(images: GeneratedImage[], fontName: string, effectType?: string): any[] {
+    return images.map((image, index) => {
+      const sanitizedFontName = fontName.replace(/[^a-zA-Z0-9-_]/g, '_');
+      const sanitizedEffectName = (effectType || 'default').replace(/[^a-zA-Z0-9-_]/g, '_');
+      
+      // ใช้ชื่อไฟล์ที่กำหนดเองถ้ามี
+      const filename = image.fileName 
+        ? `${image.fileName}.${this.config.imageFormat}`
+        : `${sanitizedFontName}_${(index + 1).toString().padStart(5, '0')}_${sanitizedEffectName}.${this.config.imageFormat}`;
+      
+      return {
+        filename: filename,
+        text: image.text,
+        font: fontName,
+        effectType: effectType || 'default',
+        category: this.categorizeText(image.text),
+        syllables: this.estimateSyllables(image.text),
+        length: image.text.length,
+        hasNumbers: /[໐-໙0-9]/.test(image.text),
+        hasEnglish: /[a-zA-Z]/.test(image.text),
+        timestamp: image.timestamp || Date.now(),
+        index: index + 1,
+        metadata: {
+          createdAt: new Date().toISOString(),
+          textLength: image.text.length,
+          hasLaoScript: /[\u0E80-\u0EFF]/.test(image.text),
+          effectApplied: effectType || 'none'
+        }
+      };
+    });
   }
 
   // สร้างสถิติ
@@ -483,24 +560,44 @@ export class RealTimeExporter {
   private generateReadme(): string {
     const stats = this.generateStatistics();
     
-    return `# Lao Language Dataset
+    return `# Lao Language Dataset with Style Effects
 
 ## Overview
-This dataset contains ${stats.totalImages} images generated from ${stats.totalFonts} fonts.
+This dataset contains ${stats.totalImages} images generated from ${stats.totalFonts} fonts with multiple style effects.
 
-## Structure
+## 🎨 New Structure (Organized by Effects)
 \`\`\`
 fonts/
 ├── font1_name/
-│   ├── font1_name_00001.${this.config.imageFormat}
-│   ├── font1_name_00002.${this.config.imageFormat}
-│   ├── ...
-│   └── labels.json
+│   ├── clear/                    # ຮູບແບບຊັດເຈນ
+│   │   ├── font1_text1_clear.${this.config.imageFormat}
+│   │   ├── font1_text2_clear.${this.config.imageFormat}
+│   │   └── labels.json
+│   ├── blurred/                  # ຮູບແບບມົວ
+│   │   ├── font1_text1_blurred.${this.config.imageFormat}
+│   │   └── labels.json
+│   ├── faded/                    # ຮູບແບບຊີດ
+│   ├── distorted/                # ຮູບແບບບິດເບື້ອນ
+│   ├── incomplete/               # ຮູບແບບບໍ່ສົມບູນ
+│   ├── shadow/                   # ຮູບແບບມີເງົາ
+│   ├── aged/                     # ຮູບແບບເກົ່າ
+│   ├── bold/                     # ຮູບແບບໜາ
+│   └── font_summary.json         # สรุปข้อมูลฟอนต์
 ├── font2_name/
-│   └── ...
+│   └── ... (same structure)
 ├── statistics.json
 └── README.md (this file)
 \`\`\`
+
+## 🎯 Style Effects Included
+- **clear**: ຮູບແບບຊັດເຈນ - Standard clear text
+- **blurred**: ຮູບແບບມົວ - Blurred text effect  
+- **faded**: ຮູບແບບຊີດ - Faded/low opacity text
+- **distorted**: ຮູບແບບບິດເບື້ອນ - Distorted text
+- **incomplete**: ຮູບແບບບໍ່ສົມບູນ - Incomplete/missing pixels
+- **shadow**: ຮູບແບບມີເງົາ - Text with shadow effect
+- **aged**: ຮູບແບບເກົ່າ - Aged/weathered text
+- **bold**: ຮູບແບບໜາ - Bold/thick text
 
 ## Font Statistics
 ${stats.fontStatistics.map(font => 

@@ -9,9 +9,11 @@ import FontPreview from './components/FontPreview';
 
 import RealTimeExportProgress from './components/RealTimeExportProgress';
 import AdvancedSettings from './components/AdvancedSettings';
+import DirectExportPanel from './components/DirectExportPanel';
 import { generateTextImage } from './utils/imageGenerator';
 import { ProfessionalFontRenderer, FontInfo } from './utils/fontRenderer';
 import { RealTimeExporter, ExportConfig, ExportProgress } from './utils/realTimeExporter';
+import DirectFileExporter from './utils/directFileExporter';
 // Lazy load GPU utilities to improve initial load time
 let gpuUtilsCache: any = null;
 const loadGPUUtils = async () => {
@@ -70,7 +72,7 @@ const App = () => {
   const [loadedFontInfos, setLoadedFontInfos] = useState<FontInfo[]>([]);
   const [customTexts, setCustomTexts] = useState<string[]>([]);
   
-  // Real-time Export States
+  // Real-time Export States (legacy - will be replaced)
   const [realTimeExporter, setRealTimeExporter] = useState<RealTimeExporter | null>(null);
   const [exportProgress, setExportProgress] = useState<ExportProgress>({
     totalImages: 0,
@@ -81,6 +83,9 @@ const App = () => {
     isExporting: false,
     lastExportedFile: ''
   });
+
+  // Direct File Export States (new system)
+  const [directExporter, setDirectExporter] = useState<DirectFileExporter | null>(null);
 
   // GPU และ Multi-font states
   const [useGPU, setUseGPU] = useState(false); // Will be set after GPU utils load
@@ -227,6 +232,12 @@ const App = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // เริ่มต้น Direct Export session
+    if (directExporter) {
+      const totalImages = settings.numSamples * (settings.styleVariations ? 8 : 1) * fonts.length;
+      directExporter.startNewSession(totalImages);
     }
 
     // เริ่มต้น GPU Generator ถ้าเปิดใช้งาน
@@ -598,16 +609,29 @@ const App = () => {
                   }
                 );
                 
+                // 📁 สร้างชื่อไฟล์ที่แยก effect ออกจากกัน
+                const cleanFontName = currentFont.name.replace(/\.[^/.]+$/, ""); // ลบ extension
+                const textHash = selectedText.substring(0, 10).replace(/[^\u0E80-\u0EFFa-zA-Z0-9]/g, '_');
+                const fileName = `${cleanFontName}_${textHash}_${styleName}`;
+                
                 const newImage = {
                   dataUrl: imageData.dataUrl,
                   text: imageData.text,
                   font: `${imageData.font} (${styleName})`,
                   style: styleName,
+                  fileName: fileName, // เพิ่มชื่อไฟล์ที่กำหนดเอง
+                  effectType: styleName, // เพิ่มประเภท effect
+                  fontName: cleanFontName, // เพิ่มชื่อฟอนต์ที่สะอาด
                 };
 
                 generatedImages.push(newImage);
 
-                // 🚀 Real-time Export: Export ทันทีที่สร้างเสร็จ
+                // 🚀 Direct Export: บันทึกไฟล์โดยตรงทันที
+                if (directExporter) {
+                  await directExporter.exportImage(newImage);
+                }
+
+                // Legacy real-time export (เก็บไว้ compatibility)
                 if (realTimeExporter && settings.enableRealTimeExport) {
                   await realTimeExporter.addToExportQueue(newImage);
                 }
@@ -655,7 +679,12 @@ const App = () => {
 
               generatedImages.push(newImage);
 
-              // 🚀 Real-time Export: Export ทันทีที่สร้างเสร็จ
+              // 🚀 Direct Export: บันทึกไฟล์โดยตรงทันที
+              if (directExporter) {
+                await directExporter.exportImage(newImage);
+              }
+
+              // Legacy real-time export (เก็บไว้ compatibility)
               if (realTimeExporter && settings.enableRealTimeExport) {
                 await realTimeExporter.addToExportQueue(newImage);
               }
@@ -744,6 +773,11 @@ const App = () => {
 
     console.log("handleGenerate: Loop finished. Setting final state.");
     setPreviewImages(generatedImages);
+
+    // เสร็จสิ้น Direct Export session
+    if (directExporter) {
+      directExporter.completeExport();
+    }
     
     // Calculate font usage statistics
     const fontStats = generatedImages.reduce((stats, img) => {
@@ -1384,8 +1418,17 @@ const App = () => {
 
         {/* Results and Controls Section */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Advanced Settings */}
-          <div className="xl:col-span-1">
+          {/* Left Column - Direct Export & Settings */}
+          <div className="xl:col-span-1 space-y-6">
+            {/* Direct Export Panel - New System */}
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100/50 hover:shadow-2xl transition-all duration-300">
+              <DirectExportPanel
+                onExporterChange={setDirectExporter}
+                isGenerating={generationState.isGenerating}
+              />
+            </div>
+
+            {/* Advanced Settings */}
             <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-red-100/50 hover:shadow-2xl transition-all duration-300">
               <AdvancedSettings
                 useGPU={useGPU}
@@ -1416,17 +1459,24 @@ const App = () => {
             
 
             
-            {/* Download Section Card */}
-            <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-blue-100/50">
-              <DownloadSection
-                dataset={previewImages}
-                isVisible={generationState.isComplete}
-                imageWidth={settings.imageWidth}
-                imageHeight={settings.imageHeight}
-                projectName={settings.projectName}
-                outputPath={settings.outputPath}
-              />
-            </div>
+            {/* Legacy Download Section - Hidden (Direct Export replaces this) */}
+            {!directExporter && (
+              <div className="bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-blue-100/50 opacity-50">
+                <DownloadSection
+                  dataset={previewImages}
+                  isVisible={generationState.isComplete}
+                  imageWidth={settings.imageWidth}
+                  imageHeight={settings.imageHeight}
+                  projectName={settings.projectName}
+                  outputPath={settings.outputPath}
+                />
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800 font-medium">
+                    📄 Legacy download - Use Direct Export instead
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

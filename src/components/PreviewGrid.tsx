@@ -6,6 +6,9 @@ export interface GeneratedImage {
   text: string;
   font: string;
   style?: string;
+  fileName?: string; // ชื่อไฟล์ที่กำหนดเอง
+  effectType?: string; // ประเภท effect (clear, blurred, etc.)
+  fontName?: string; // ชื่อฟอนต์ที่สะอาด
 }
 
 interface PreviewGridProps {
