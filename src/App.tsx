@@ -1280,10 +1280,7 @@ const App = () => {
             />
           </div>
           
-          {/* Configuration Panel - Center */}
-          <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border-2 border-blue-100/50 hover:shadow-3xl transition-all duration-300">
-            <ConfigPanel settings={settings} onSettingsChange={handleSettingsChange} totalFonts={fonts.length} />
-          </div>
+          {/* Configuration Panel moved to main section above */}
         </div>
 
         {/* Professional Font Preview - Full Width */}
@@ -1331,34 +1328,43 @@ const App = () => {
           <VocabularyDisplay customTexts={customTexts} />
         </div>
 
-        {/* Results and Controls Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Direct Export & Settings */}
-          <div className="xl:col-span-1 space-y-6">
-            {/* Direct Export Panel - New System */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100/50 hover:shadow-2xl transition-all duration-300">
-              <DirectExportPanel
-                onExporterChange={setDirectExporter}
-                isGenerating={generationState.isGenerating}
-              />
-            </div>
+        {/* Main Configuration Panel - Full Width */}
+        <div className="bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border-2 border-blue-100/50 hover:shadow-3xl transition-all duration-300 mb-8">
+          <ConfigPanel
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+            totalFonts={fonts.length}
+          />
+        </div>
 
-            {/* Advanced Settings */}
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-red-100/50 hover:shadow-2xl transition-all duration-300">
-              <AdvancedSettings
-                useGPU={useGPU}
-                setUseGPU={setUseGPU}
-                maxConcurrentFonts={maxConcurrentFonts}
-                setMaxConcurrentFonts={setMaxConcurrentFonts}
-                singleDownload={singleDownload}
-                setSingleDownload={setSingleDownload}
-                totalFonts={fonts.length}
-              />
-            </div>
+        {/* Side-by-Side Panels */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
+          {/* Left Side - Direct Export System */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-green-100/50 hover:shadow-2xl transition-all duration-300">
+            <DirectExportPanel
+              onExporterChange={setDirectExporter}
+              isGenerating={generationState.isGenerating}
+            />
           </div>
-          
-          {/* Right Columns - Results */}
-          <div className="xl:col-span-2 space-y-6">
+
+          {/* Right Side - Advanced Settings */}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-red-100/50 hover:shadow-2xl transition-all duration-300">
+            <AdvancedSettings
+              useGPU={useGPU}
+              setUseGPU={setUseGPU}
+              maxConcurrentFonts={maxConcurrentFonts}
+              setMaxConcurrentFonts={setMaxConcurrentFonts}
+              singleDownload={singleDownload}
+              setSingleDownload={setSingleDownload}
+              totalFonts={fonts.length}
+            />
+          </div>
+        </div>
+
+        {/* Results and Controls Section */}
+        <div className="grid grid-cols-1 gap-8">
+          {/* Results Column */}
+          <div className="space-y-6">
             {/* Real-time Export Progress */}
             <RealTimeExportProgress 
               progress={exportProgress}
