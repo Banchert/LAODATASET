@@ -303,16 +303,16 @@ class DirectFileExporter {
   getStats() {
     const { totalImages, exportedImages, startTime, lastExportTime } = this.progress;
     const elapsed = lastExportTime - startTime;
-    const rate = exportedImages / (elapsed / 1000); // images per second
-    const percentage = (exportedImages / totalImages) * 100;
+    const rate = exportedImages && elapsed > 0 ? exportedImages / (elapsed / 1000) : 0; // images per second
+    const percentage = totalImages > 0 ? (exportedImages / totalImages) * 100 : 0;
 
     return {
-      percentage: Math.round(percentage),
-      rate: Math.round(rate * 100) / 100,
-      elapsed: Math.round(elapsed / 1000),
-      remaining: Math.round(this.progress.estimatedTimeRemaining / 1000),
-      totalFiles: totalImages,
-      exportedFiles: exportedImages
+      percentage: Math.round(percentage || 0),
+      rate: Math.round((rate || 0) * 100) / 100,
+      elapsed: Math.round((elapsed || 0) / 1000),
+      remaining: Math.round((this.progress.estimatedTimeRemaining || 0) / 1000),
+      totalFiles: totalImages || 0,
+      exportedFiles: exportedImages || 0
     };
   }
 }

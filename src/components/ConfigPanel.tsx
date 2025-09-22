@@ -392,8 +392,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ settings, onSettingsChange, t
       {/* Real-time Export Settings */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <FolderOpen className="h-4 w-4 text-primary" />
-          <Label className="font-semibold lao-text">📤 Real-time Export:</Label>
+          <span className="text-lg">📤</span>
+          <Label className="font-semibold lao-text">Real-time Export:</Label>
         </div>
         
         <div className="space-y-3">

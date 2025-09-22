@@ -79,6 +79,12 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
   const estimateDatasetSize = () => {
     const imageSize = 50; // KB per image (ประมาณ)
     const totalImages = progress.totalImages || 15000;
+
+    // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้อง
+    if (!totalImages || isNaN(totalImages) || totalImages <= 0) {
+      return "0 MB";
+    }
+
     const estimatedSizeKB = totalImages * imageSize;
     const estimatedSizeMB = estimatedSizeKB / 1024;
     const estimatedSizeGB = estimatedSizeMB / 1024;
@@ -86,7 +92,7 @@ const DirectExportPanel: React.FC<DirectExportPanelProps> = ({
     if (estimatedSizeGB > 1) {
       return `${estimatedSizeGB.toFixed(1)} GB`;
     } else {
-      return `${estimatedSizeMB.toFixed(0)} MB`;
+      return `${Math.round(estimatedSizeMB)} MB`;
     }
   };
 
